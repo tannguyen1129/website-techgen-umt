@@ -1,0 +1,85 @@
+services:
+  # 0. DATABASE (PostgreSQL)
+  umt-postgres:
+    image: postgres:16-alpine
+    container_name: umt-postgres
+    restart: always
+    environment:
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=admin123
+      - POSTGRES_DB=umt_techgen_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d umt_techgen_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  # 0. BACKEND (NestJS API)
+  umt-backend:
+    build:
+      context: ../umt-backend
+    container_name: umt-backend
+    restart: always
+    env_file:
+      - ../umt-backend/.env
+    environment:
+      - DB_HOST=umt-postgres
+      - DB_PORT=5432
+      - DB_SYNCHRONIZE=false
+      - NODE_ENV=production
+    volumes:
+      - ../umt-backend/uploads:/app/uploads
+    ports:
+      - "4000:4000"
+    depends_on:
+      umt-postgres:
+        condition: service_healthy
+
+  # 1. FRONTEND (Next.js App)
+  umt-techgen-web:
+    build: 
+      context: .
+      # --- [QUAN TRỌNG] Truyền biến vào Dockerfile lúc Build ---
+      args:
+        NEXT_PUBLIC_API_URL: https://techgen.umt.edu.vn/api
+      # ---------------------------------------------------------
+    container_name: umt-techgen-web
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      # Biến môi trường lúc chạy (Runtime)
+      - NEXT_PUBLIC_API_URL=https://techgen.umt.edu.vn/api
+      - NEXTAUTH_URL=https://techgen.umt.edu.vn
+
+  # 2. NGINX (Web Server & SSL)
+  nginx:
+    image: nginx:stable
+    container_name: umt-nginx
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
+    depends_on:
+      - umt-backend
+      - umt-techgen-web
+
+  # 3. CERTBOT (Auto SSL)
+  certbot:
+    image: certbot/certbot
+    container_name: umt-certbot
+    restart: always
+    volumes:
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
+    # Script giữ container luôn chạy và check gia hạn mỗi 12h
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
+
+volumes:
+  postgres_data:
