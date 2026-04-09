@@ -1,0 +1,66 @@
+name: umt-techgen-lab
+
+services:
+  umt-postgres-lab:
+    image: postgres:16-alpine
+    restart: always
+    environment:
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=admin123
+      - POSTGRES_DB=umt_techgen_lab_db
+    volumes:
+      - postgres_lab_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d umt_techgen_lab_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  umt-backend-lab:
+    build:
+      context: ../umt-backend
+    restart: always
+    env_file:
+      - ../umt-backend/.env
+    environment:
+      - DB_HOST=umt-postgres-lab
+      - DB_PORT=5432
+      - DB_NAME=umt_techgen_lab_db
+      - DB_SYNCHRONIZE=true
+      - NODE_ENV=production
+    volumes:
+      - ../umt-backend/uploads:/app/uploads
+    ports:
+      - "4400:4000"
+    depends_on:
+      umt-postgres-lab:
+        condition: service_healthy
+
+  umt-techgen-web-lab:
+    build:
+      context: .
+      args:
+        NEXT_PUBLIC_API_URL: http://localhost:8088/api
+    restart: always
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8088/api
+      - SERVER_API_URL=http://umt-backend-lab:4000/api
+      - NEXTAUTH_URL=http://localhost:8088
+    ports:
+      - "3300:3000"
+    depends_on:
+      - umt-backend-lab
+
+  nginx-lab:
+    image: nginx:stable
+    restart: always
+    ports:
+      - "8088:80"
+    volumes:
+      - ./nginx/lab-conf.d:/etc/nginx/conf.d
+    depends_on:
+      - umt-backend-lab
+      - umt-techgen-web-lab
+
+volumes:
+  postgres_lab_data:

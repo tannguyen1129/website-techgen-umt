@@ -27,7 +27,7 @@ services:
     environment:
       - DB_HOST=umt-postgres
       - DB_PORT=5432
-      - DB_SYNCHRONIZE=false
+      - DB_SYNCHRONIZE=true
       - NODE_ENV=production
     volumes:
       - ../umt-backend/uploads:/app/uploads
@@ -43,7 +43,7 @@ services:
       context: .
       # --- [QUAN TRỌNG] Truyền biến vào Dockerfile lúc Build ---
       args:
-        NEXT_PUBLIC_API_URL: https://techgen.umt.edu.vn/api
+        NEXT_PUBLIC_API_URL: https://techgen.sontan.info/api
       # ---------------------------------------------------------
     container_name: umt-techgen-web
     restart: always
@@ -51,8 +51,9 @@ services:
       - "3000:3000"
     environment:
       # Biến môi trường lúc chạy (Runtime)
-      - NEXT_PUBLIC_API_URL=https://techgen.umt.edu.vn/api
-      - NEXTAUTH_URL=https://techgen.umt.edu.vn
+      - NEXT_PUBLIC_API_URL=https://techgen.sontan.info/api
+      - SERVER_API_URL=http://umt-backend:4000/api
+      - NEXTAUTH_URL=https://techgen.sontan.info
 
   # 2. NGINX (Web Server & SSL)
   nginx:
@@ -78,7 +79,7 @@ services:
     volumes:
       - ./certbot/conf:/etc/letsencrypt
       - ./certbot/www:/var/www/certbot
-    # Script giữ container luôn chạy và check gia hạn mỗi 12h
+    # Script giữ container luôn chạy và check gia hạn mỗi 12h, nếu có SSL mới sẽ gửi signal reload Nginx
     entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
 
 volumes:

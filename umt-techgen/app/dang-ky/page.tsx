@@ -108,41 +108,6 @@ export default function RegistrationPage() {
   const [cccdBackFile, setCccdBackFile] = useState<File | null>(null);
   const [studentCardFile, setStudentCardFile] = useState<File | null>(null);
 
-  // --- 1. STATE CHO LOGIC KIỂM TRA THỜI GIAN (MỚI THÊM) ---
-  const [isOpenForm, setIsOpenForm] = useState(false); // Mặc định đóng để check
-  const [closeMessage, setCloseMessage] = useState("");
-  const [loadingCheck, setLoadingCheck] = useState(true); // Loading khi đang check giờ
-
-  // --- 2. LOGIC CHECK THỜI GIAN (MỚI THÊM) ---
-  useEffect(() => {
-    const checkTime = () => {
-        const now = new Date();
-        
-        // COPY Y CHANG CẤU HÌNH TỪ BACKEND SANG (Thêm +07:00)
-        const rounds = [
-            { id: 1, start: new Date('2025-10-01T00:00:00+07:00'), end: new Date('2025-11-30T23:59:59+07:00') },
-            { id: 2, start: new Date('2025-12-04T14:15:00+07:00'), end: new Date('2026-01-31T23:59:59+07:00') }
-        ];
-
-        const activeRound = rounds.find(r => now >= r.start && now <= r.end);
-
-        if (activeRound) {
-            setIsOpenForm(true);
-        } else {
-            setIsOpenForm(false);
-            if (now < rounds[0].end) {
-                 setCloseMessage("Cổng đăng ký chưa mở.");
-            } else if (now > rounds[0].end && now < rounds[1].start) {
-                 setCloseMessage("Thời gian đăng ký vòng Sơ loại 1 đã kết thúc. Thời gian đăng kỳ vòng Sơ loại 2 sẽ mở vào ngày 03/12/2025.");
-            } else {
-                 setCloseMessage("Thời gian đăng ký tham gia cuộc thi đã kết thúc.");
-            }
-        }
-        setLoadingCheck(false);
-    };
-    checkTime();
-  }, []);
-
   const {
     register,
     handleSubmit,
@@ -200,49 +165,6 @@ export default function RegistrationPage() {
       setIsSubmitting(false);
     }
   };
-
-  // --- 3. MÀN HÌNH ĐÓNG ĐƠN (HIỂN THỊ NẾU CHƯA TỚI GIỜ) ---
-  if (!loadingCheck && !isOpenForm) {
-    return (
-        <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4 font-sans">
-            <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8 text-center border border-slate-200 animate-fade-in-up">
-                <div className="w-20 h-20 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-6">
-                    <Clock size={40} className="text-blue-600" />
-                </div>
-                <h2 className="text-2xl font-bold text-slate-900 mb-2">Cổng đăng ký đang tạm đóng</h2>
-                <p className="text-slate-600 mb-6 leading-relaxed font-medium">
-                    {closeMessage}
-                </p>
-                
-                <div className="bg-blue-50/50 p-5 rounded-xl border border-blue-100 mb-6 text-left">
-                    <h4 className="font-bold text-blue-800 text-sm mb-3 flex items-center gap-2 uppercase tracking-wide">
-                        <CalendarDays size={16}/> Lịch trình mở đơn:
-                    </h4>
-                    <ul className="text-sm space-y-3 text-slate-600">
-                        <li className="flex justify-between items-center">
-                            <span className="font-bold">Vòng 1:</span> 
-                            <span className="text-slate-400 line-through decoration-slate-400">Đến hết 30/11</span>
-                        </li>
-                        <li className="flex justify-between items-center">
-                            <span className="font-bold">Vòng 2:</span> 
-                            <span className={new Date() > new Date('2025-12-12') ? "text-slate-400 line-through" : "text-blue-700 font-bold"}>
-                                03/12 - 17/12
-                            </span>
-                        </li>
-                        <li className="flex justify-between items-center">
-                            <span className="font-bold">Vòng 3:</span> 
-                            <span className="text-orange-600 font-bold">20/12 - 27/12</span>
-                        </li>
-                    </ul>
-                </div>
-
-                <Link href="/" className="block w-full py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition shadow-lg shadow-blue-600/20">
-                    Về trang chủ
-                </Link>
-            </div>
-        </div>
-    );
-  }
 
   // --- MÀN HÌNH THÀNH CÔNG ---
   if (isSuccess) {

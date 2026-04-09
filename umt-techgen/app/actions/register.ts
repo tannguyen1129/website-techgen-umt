@@ -175,7 +175,10 @@ export async function updateCandidateInfo(id: string, data: any) {
 }
 
 export async function sendEmailNotification(id: string, message: string) {
-    const API_URL = process.env.SERVER_API_URL || "http://10.11.10.21:4000/api";
+    const API_URL =
+        process.env.SERVER_API_URL ||
+        process.env.NEXT_PUBLIC_API_URL ||
+        "http://localhost:4000/api";
     try {
         const res = await fetch(`${API_URL}/candidates/${id}/send-email`, {
             method: 'POST',
