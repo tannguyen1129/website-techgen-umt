@@ -15,7 +15,11 @@ async function bootstrap() {
   // 4. Bật CORS để Frontend gọi được
   app.enableCors({
     origin: process.env.NODE_ENV === 'production' 
-      ? ['https://techgen.umt.edu.vn', 'http://localhost:3000'] // Danh sách domain được phép gọi API
+      ? [
+          'https://techgen.sontan.info',
+          'https://techgen.umt.edu.vn',
+          'http://localhost:3000',
+        ] // Danh sách domain được phép gọi API
       : true, // Dev thì cho phép tất cả
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true,

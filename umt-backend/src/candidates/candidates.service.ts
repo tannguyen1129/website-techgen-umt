@@ -13,45 +13,7 @@ export class CandidatesService {
   ) {}
 
   async create(data: any) {
-    // 1. Lấy thời gian thực tế (Không cần cộng trừ thủ công nữa)
-    const now = new Date(); 
-
-    // Cấu hình thời gian CHUẨN QUỐC TẾ (Thêm đuôi +07:00 vào cuối)
-    const rounds = [
-        {
-            name: "Vòng Sơ loại 1",
-            start: new Date('2025-10-01T00:00:00+07:00'), 
-            end:   new Date('2025-11-30T23:59:59+07:00')
-        },
-        {
-            name: "Vòng Sơ loại 2",
-            // Lưu ý: Đuôi +07:00 để khẳng định đây là giờ Việt Nam
-            start: new Date('2025-12-04T14:15:00+07:00'), 
-            end:   new Date('2026-01-31T23:59:59+07:00')
-        },
-    ];
-
-    // 2. Kiểm tra hợp lệ
-    let isOpen = false;
-    let currentRound = "";
-
-    for (const round of rounds) {
-        // So sánh trực tiếp (JS sẽ tự quy đổi về cùng một hệ quy chiếu milliseconds)
-        if (now >= round.start && now <= round.end) {
-            isOpen = true;
-            currentRound = round.name;
-            break;
-        }
-    }
-
-    if (!isOpen) {
-        throw new HttpException(
-            `Cổng đăng ký hiện đang đóng. (Server Time: ${now.toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })})`, 
-            HttpStatus.BAD_REQUEST
-        );
-    }
-
-    // 3. Lưu
+    // Cho phep nhan ho so lien tuc cho dot mo don hien tai.
     return await this.candidateRepo.save(data);
   }
 
